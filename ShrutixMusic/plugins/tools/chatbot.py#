@@ -1,0 +1,284 @@
+import os
+import json
+import httpx
+from datetime import datetime
+
+from pyrogram import filters, enums
+from pyrogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+
+from ShrutixMusic import nand
+from config import MISTRAL_API_KEY
+
+
+# ============================================
+#              JSON HANDLING
+# ============================================
+
+CONFIG_FILE = "chatbot_config.json"
+MEMORY_FILE = "chatbot_memory.json"
+MAX_HISTORY = 20
+
+def load_json(path):
+    if not os.path.exists(path):
+        return {}
+    try:
+        return json.load(open(path, "r", encoding="utf-8"))
+    except:
+        return {}
+
+def save_json(path, data):
+    try:
+        json.dump(
+            data,
+            open(path, "w", encoding="utf-8"),
+            indent=2,
+            ensure_ascii=False
+        )
+    except:
+        pass
+
+
+# ============================================
+#         CHATBOT ENABLE/DISABLE STORAGE
+# ============================================
+
+def is_chat_enabled(chat_id):
+    cfg = load_json(CONFIG_FILE)
+    return cfg.get(str(chat_id), False)
+
+def set_chat_enabled(chat_id, value):
+    cfg = load_json(CONFIG_FILE)
+    cfg[str(chat_id)] = value
+    save_json(CONFIG_FILE, cfg)
+
+
+# ============================================
+#               MEMORY STORAGE
+# ============================================
+
+def get_chat_memory(chat_id):
+    m = load_json(MEMORY_FILE)
+    return m.get(str(chat_id), [])
+
+def add_to_memory(chat_id, role, content):
+    m = load_json(MEMORY_FILE)
+    k = str(chat_id)
+
+    if k not in m:
+        m[k] = []
+
+    m[k].append({
+        "role": role,
+        "content": content,
+        "time": datetime.now().isoformat()
+    })
+
+    if len(m[k]) > MAX_HISTORY:
+        m[k] = m[k][-MAX_HISTORY:]
+
+    save_json(MEMORY_FILE, m)
+
+
+
+# ============================================
+#         ADMIN CHECK FOR /chatbot
+# ============================================
+
+async def is_admin(message):
+    try:
+        member = await message.chat.get_member(message.from_user.id)
+        return member.status in [
+            enums.ChatMemberStatus.ADMINISTRATOR,
+            enums.ChatMemberStatus.OWNER,
+        ]
+    except:
+        return False
+
+
+
+# ============================================
+#            /CHATBOT PANEL
+# ============================================
+
+@nand.on_message(filters.group & filters.command("chatbot"))
+async def chatbot_panel(client, message):
+
+    if not message.from_user:
+        return await message.reply("⚠️ Anonymous admin allowed nahi.")
+
+    if not await is_admin(message):
+        return await message.reply("❌ <b>Only Admin/Owner can use this command!</b>")
+
+    kb = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("🟢 Enable", callback_data="chatEnable"),
+                InlineKeyboardButton("🔴 Disable", callback_data="chatDisable")
+            ],
+            [
+                InlineKeyboardButton("📊 Status", callback_data="chatStatus")
+            ]
+        ]
+    )
+
+    await message.reply(
+        "🤖 <b>Chatbot Control Panel</b>\n\n<b>Select an option:</b>",
+        reply_markup=kb
+    )
+
+
+
+# ============================================
+#         CALLBACK BUTTONS
+# ============================================
+
+@nand.on_callback_query(filters.regex("^chat"))
+async def chatbot_callback(client, q):
+
+    chat_id = q.message.chat.id
+    data = q.data
+
+    # ENABLE
+    if data == "chatEnable":
+        set_chat_enabled(chat_id, True)
+        return await q.message.edit_text(
+            "✅ <b>Chatbot Enabled Successfully!</b>\n\n🎉 <b>I will reply in this group now.</b>"
+        )
+
+    # DISABLE
+    if data == "chatDisable":
+        set_chat_enabled(chat_id, False)
+        return await q.message.edit_text(
+            "🚫 <b>Chatbot Disabled Successfully!</b>\n\n😴 <b>I will not reply in this group.</b>"
+        )
+
+    # STATUS
+    if data == "chatStatus":
+        st = is_chat_enabled(chat_id)
+
+        if st:
+            return await q.message.edit_text(
+                f"🤖 <b>Chatbot Status</b>\n\n"
+                f"<b>Current Status:</b> 🟢 <b>ENABLED</b>\n\n"
+                f"<b>Chat ID:</b> {chat_id}"
+            )
+        else:
+            return await q.message.edit_text(
+                f"🤖 <b>Chatbot Status</b>\n\n"
+                f"<b>Current Status:</b> 🔴 <b>DISABLED</b>\n\n"
+                f"<b>Chat ID:</b>{chat_id}"
+            )
+
+
+
+# ============================================
+#           MISTRAL AI ENGINE
+# ============================================
+
+API_URL = "https://api.mistral.ai/v1/chat/completions"
+MODEL = "mistral-small-latest"
+
+async def ask_mistral(chat_id, text):
+
+    history = get_chat_memory(chat_id)
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are Ananya, a friendly Indian girl. "
+                "Reply in natural Hinglish, short & sweet. "
+                "If someone asks about owner → Always reply: 'Mera owner @WTF_NoHope hai.'"
+            )
+        }
+    ]
+
+    for m in history[-10:]:
+        messages.append({"role": m["role"], "content": m["content"]})
+
+    messages.append({"role": "user", "content": text})
+
+    try:
+        async with httpx.AsyncClient(timeout=40) as client:
+            r = await client.post(
+                API_URL,
+                headers={
+                    "Authorization": f"Bearer {MISTRAL_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": MODEL,
+                    "messages": messages,
+                    "max_tokens": 300,
+                    "temperature": 0.7
+                }
+            )
+
+        reply = r.json()["choices"][0]["message"]["content"].strip()
+
+    except Exception as e:
+        return f"⚠️ API Error: {e}"
+
+    add_to_memory(chat_id, "user", text)
+    add_to_memory(chat_id, "assistant", reply)
+
+    if "owner" in text.lower():
+        reply += "\n\nMera owner @WTF_NoHope 🥀🪽 hai."
+
+    return reply
+
+
+
+# ============================================
+#         GROUP CHAT HANDLING
+# ============================================
+
+@nand.on_message(filters.group & filters.text)
+async def group_mistral(client, message):
+
+    if not is_chat_enabled(message.chat.id):
+        return
+
+    txt = message.text
+
+    if txt.startswith("/"):
+        return
+
+    should = False
+
+    if message.reply_to_message and message.reply_to_message.from_user:
+        if message.reply_to_message.from_user.id == client.me.id:
+            should = True
+
+    if client.me.username.lower() in txt.lower():
+        should = True
+        txt = txt.replace(f"@{client.me.username}", "").strip()
+
+    if not should:
+        return
+
+    await message.reply_chat_action(enums.ChatAction.TYPING)
+
+    ans = await ask_mistral(message.chat.id, txt)
+    await message.reply(ans)
+
+
+
+# ============================================
+#         PRIVATE CHAT HANDLING
+# ============================================
+
+@nand.on_message(filters.private & filters.text)
+async def private_ai(client, message):
+
+    if message.text.startswith("/"):
+        return
+
+    await message.reply_chat_action(enums.ChatAction.TYPING)
+
+    ans = await ask_mistral(message.from_user.id, message.text)
+    await message.reply(ans)

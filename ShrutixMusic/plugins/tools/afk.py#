@@ -1,0 +1,159 @@
+import time
+from pyrogram import filters
+from pyrogram.types import Message
+from ShrutixMusic import nand
+from ShrutixMusic.core.readable_time import get_readable_time
+from ShrutixMusic.core.afkdb import add_afk, is_afk, remove_afk
+
+
+# =============================================================
+#                     /afk  →  Set AFK
+# =============================================================
+
+@nand.on_message(filters.command(["afk"], prefixes=["/", "!"]))
+async def afk_set(_, message: Message):
+    user = message.from_user
+    user_id = user.id
+    name = user.first_name.lower().title()
+
+    reason = None
+    if len(message.command) > 1:
+        reason = message.text.split(None, 1)[1][:100].lower()
+
+    await add_afk(user_id, {
+        "type": "text",
+        "time": time.time(),
+        "data": None,
+        "reason": reason
+    })
+
+    msg = f"❖ {name} is now afk!"
+    if reason:
+        msg += f"\n● Reason: {reason}"
+
+    await message.reply_text(msg)
+
+
+
+# =============================================================
+#                     /unafk → Remove AFK
+# =============================================================
+
+@nand.on_message(filters.command(["unafk"], prefixes=["/", "!"]))
+async def afk_remove(_, message: Message):
+    user = message.from_user
+    user_id = user.id
+    name = user.first_name.lower().title()
+
+    check, data = await is_afk(user_id)
+    if not check:
+        return await message.reply_text(f"❖ {name} is NOT afk!")
+
+    await remove_afk(user_id)
+    ago = get_readable_time(int(time.time() - data["time"]))
+
+    msg = f"❖ Welcome back {name}!\n"
+    msg += f"● You were away for: {ago}"
+    if data["reason"]:
+        msg += f"\n● Reason: {data['reason'].lower()}"
+
+    await message.reply_text(msg)
+
+
+
+# =============================================================
+#                     /away → Same as /unafk
+# =============================================================
+
+@nand.on_message(filters.command(["away"], prefixes=["/", "!"]))
+async def away_back(_, message: Message):
+    user = message.from_user
+    user_id = user.id
+    name = user.first_name.lower().title()
+
+    check, data = await is_afk(user_id)
+    if not check:
+        return await message.reply_text(f"❖ {name} is NOT afk!")
+
+    await remove_afk(user_id)
+    ago = get_readable_time(int(time.time() - data["time"]))
+
+    msg = f"❖ Welcome back {name}!\n"
+    msg += f"● You were away for: {ago}"
+    if data["reason"]:
+        msg += f"\n● Reason: {data['reason'].lower()}"
+
+    await message.reply_text(msg)
+
+
+
+# =============================================================
+#                   /afkstatus  → AFK Info
+# =============================================================
+
+@nand.on_message(filters.command(["afkstatus"], prefixes=["/", "!"]))
+async def afk_status(_, message: Message):
+    user = message.from_user
+    user_id = user.id
+    name = user.first_name.lower().title()
+
+    check, data = await is_afk(user_id)
+    if not check:
+        return await message.reply_text(f"❖ {name} is NOT afk!")
+
+    ago = get_readable_time(int(time.time() - data["time"]))
+
+    msg = f"❖ {name} is afk!\n"
+    msg += f"● Away for: {ago}"
+    if data["reason"]:
+        msg += f"\n● Reason: {data['reason'].lower()}"
+
+    await message.reply_text(msg)
+
+
+
+# =============================================================
+#       Auto Remove AFK + Tag/Reply AFK Notify
+# =============================================================
+
+@nand.on_message(~filters.me & ~filters.bot & ~filters.via_bot)
+async def afk_auto(_, message: Message):
+    user = message.from_user
+    if not user:
+        return
+
+    user_id = user.id
+    name = user.first_name.lower().title()
+
+    # -----------------------
+    #   User sends message → AFK remove
+    # -----------------------
+    check, data = await is_afk(user_id)
+    if check:
+        await remove_afk(user_id)
+        ago = get_readable_time(int(time.time() - data["time"]))
+
+        msg = f"❖ Welcome back {name}!\n"
+        msg += f"● You were away for: {ago}"
+        if data["reason"]:
+            msg += f"\n● Reason: {data['reason'].lower()}"
+
+        await message.reply_text(msg)
+
+    # -----------------------
+    #   Check AFK user in reply
+    # -----------------------
+    if message.reply_to_message:
+        r = message.reply_to_message.from_user
+        if r:
+            r_check, r_data = await is_afk(r.id)
+            if r_check:
+                ago = get_readable_time(int(time.time() - r_data["time"]))
+
+                msg = f"❖ {r.first_name.lower().title()} is afk!\n"
+                msg += f"● Since: {ago}"
+                if r_data["reason"]:
+                    msg += f"\n● Reason: {r_data['reason'].lower()}"
+
+                await message.reply_text(msg)
+              
