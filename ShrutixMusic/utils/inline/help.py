@@ -2,7 +2,7 @@ import random
 from typing import Union
 
 from pyrogram.enums import ButtonStyle
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 def random_style():
@@ -153,4 +153,4 @@ def private_help_panel(_):
                 style=random_style(),
             )
         ]
-    ]
+                    ]
