@@ -22,33 +22,6 @@ from ShrutixMusic.utils.inline import (
 )
 from ShrutixMusic.utils.logger import play_logs
 from ShrutixMusic.utils.stream.stream import stream
-from config import AYU, BANNED_USERS, lyrical
-
-
-# ==================== AYU SEARCH MESSAGES ====================
-_ayu_index = 0
-_ayu_order = list(range(len(AYU)))
-random.shuffle(_ayu_order)
-
-
-def get_search_msg(user_name=""):
-    global _ayu_index, _ayu_order
-
-    if not AYU:
-        return "🔎 Searching..."
-
-    if _ayu_index >= len(_ayu_order):
-        _ayu_index = 0
-        _ayu_order = list(range(len(AYU)))
-        random.shuffle(_ayu_order)
-
-    msg = AYU[_ayu_order[_ayu_index]]
-    _ayu_index += 1
-
-    try:
-        return msg.format(user_name)
-    except (IndexError, KeyError, ValueError):
-        return msg
 
 
 @nand.on_message(
