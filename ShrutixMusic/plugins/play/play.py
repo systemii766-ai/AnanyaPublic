@@ -6,19 +6,11 @@ from pyrogram.types import InlineKeyboardMarkup, InputMediaPhoto, Message
 from pytgcalls.exceptions import NoActiveGroupCall
 
 import config
-from ShrutixMusic import (
-    Apple,
-    Resso,
-    SoundCloud,
-    Spotify,
-    Telegram,
-    YouTube,
-    nand,
-    BANNED_USERS,
-)
+from ShrutixMusic import Apple, Resso, SoundCloud, Spotify, Telegram, YouTube, nand
 from ShrutixMusic.core.call import Shruti
 from ShrutixMusic.utils import seconds_to_min, time_to_seconds
 from ShrutixMusic.utils.channelplay import get_channeplayCB
+from ShrutixMusic.utils.database import is_active_chat
 from ShrutixMusic.utils.decorators.language import languageCB
 from ShrutixMusic.utils.decorators.play import PlayWrapper
 from ShrutixMusic.utils.formatters import formats
@@ -31,7 +23,7 @@ from ShrutixMusic.utils.inline import (
 )
 from ShrutixMusic.utils.logger import play_logs
 from ShrutixMusic.utils.stream.stream import stream
-
+from config import BANNED_USERS, lyrical
 
 @nand.on_message(
     filters.command(
