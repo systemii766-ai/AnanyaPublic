@@ -22,7 +22,33 @@ from ShrutixMusic.utils.inline import (
 )
 from ShrutixMusic.utils.logger import play_logs
 from ShrutixMusic.utils.stream.stream import stream
-from config import BANNED_USERS, lyrical
+from config import AYU, BANNED_USERS, lyrical
+
+
+# ==================== AYU SEARCH MESSAGES ====================
+_ayu_index = 0
+_ayu_order = list(range(len(AYU)))
+random.shuffle(_ayu_order)
+
+
+def get_search_msg(user_name=""):
+    global _ayu_index, _ayu_order
+
+    if not AYU:
+        return "🔎 Searching..."
+
+    if _ayu_index >= len(_ayu_order):
+        _ayu_index = 0
+        _ayu_order = list(range(len(AYU)))
+        random.shuffle(_ayu_order)
+
+    msg = AYU[_ayu_order[_ayu_index]]
+    _ayu_index += 1
+
+    try:
+        return msg.format(user_name)
+    except (IndexError, KeyError, ValueError):
+        return msg
 
 
 @nand.on_message(
@@ -55,7 +81,7 @@ async def play_commnd(
     fplay,
 ):
     mystic = await message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        get_search_msg(message.from_user.mention)
     )
     plist_id = None
     slider = None
@@ -455,7 +481,7 @@ async def play_music(client, CallbackQuery, _):
     except:
         pass
     mystic = await CallbackQuery.message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        get_search_msg(CallbackQuery.from_user.mention)
     )
     try:
         details, track_id = await YouTube.track(vidid, True)
@@ -542,7 +568,7 @@ async def play_playlists_command(client, CallbackQuery, _):
     except:
         pass
     mystic = await CallbackQuery.message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        get_search_msg(CallbackQuery.from_user.mention)
     )
     videoid = lyrical.get(videoid)
     video = True if mode == "v" else None
@@ -662,5 +688,3 @@ async def slider_queries(client, CallbackQuery, _):
         return await CallbackQuery.edit_message_media(
             media=med, reply_markup=InlineKeyboardMarkup(buttons)
         )
-
-
