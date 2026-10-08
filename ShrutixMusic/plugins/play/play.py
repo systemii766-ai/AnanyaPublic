@@ -24,6 +24,8 @@ from ShrutixMusic.utils.inline import (
 from ShrutixMusic.utils.logger import play_logs
 from ShrutixMusic.utils.stream.stream import stream
 from config import BANNED_USERS, lyrical
+def get_search_msg(user_name=""):
+    return f"🔎 Sᴇᴀʀᴄʜɪɴɢ Fᴏʀ Yᴏᴜʀ Sᴏɴɢ, {user_name}..."
 
 @nand.on_message(
     filters.command(
