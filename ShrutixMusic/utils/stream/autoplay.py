@@ -161,7 +161,7 @@ async def try_autoplay(client, chat_id, popped):
         if not img:
             return True
 
-        button = await stream_markup(
+        button = stream_markup(
             _,
             chat_id,
         )
