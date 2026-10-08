@@ -43,7 +43,11 @@ def track_markup(_, videoid, user_id, channel, fplay):
 def stream_markup_timer(_, chat_id, played, dur):
     played_sec = time_to_seconds(played)
     duration_sec = time_to_seconds(dur)
-    percentage = int((played_sec / duration_sec) * 100)
+
+    if duration_sec > 0:
+        percentage = int((played_sec / duration_sec) * 100)
+    else:
+        percentage = 0
 
     if percentage <= 10:
         bar = "◉──────────"
@@ -103,8 +107,8 @@ def stream_markup_timer(_, chat_id, played, dur):
                 style=ButtonStyle.PRIMARY,
             ),
             InlineKeyboardButton(
-                text="↻",
-                callback_data=f"ADMIN Replay|{chat_id}",
+                "ᴀᴩʟᴀʏ",
+                callback_data=f"autoplay_toggle {chat_id}",
                 style=ButtonStyle.SUCCESS,
             ),
             InlineKeyboardButton(
@@ -154,9 +158,9 @@ def stream_markup(_, chat_id):
         ],
         [
             InlineKeyboardButton(
-                "ᴄʟᴏsᴇ",
-                callback_data="close",
-                style=random_style(),
+                "ᴀᴩʟᴀʏ",
+                callback_data=f"autoplay_toggle {chat_id}",
+                style=ButtonStyle.SUCCESS,
             )
         ],
     ]
