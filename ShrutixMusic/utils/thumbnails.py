@@ -69,7 +69,12 @@ async def gen_thumb(videoid: str):
             result.get("title", "Unsupported Title")
         ).title()
 
-        duration = result.get("duration", "00:00")
+        duration = result.get("duration")
+
+        if not duration:
+            duration = "00:00"
+        else:
+            duration = str(duration).strip()
 
         thumbnails = result.get("thumbnails", [])
 
@@ -369,7 +374,10 @@ async def gen_thumb(videoid: str):
             26
         )
 
-        duration_text = duration
+        duration_text = str(duration).strip()
+
+        if not duration_text:
+            duration_text = "00:00"
 
         if ":" not in duration_text:
             duration_text = (
