@@ -124,7 +124,7 @@ def stream_markup_timer(_, chat_id, played, dur):
                 style=random_style(),
             ),
             InlineKeyboardButton(
-                "sᴜᴘᴘᴏʀᴛ",
+                "sᴜᴩᴩᴏʀᴛ",
                 url=SUPPORT_CHAT,
                 style=random_style(),
             ),
@@ -133,37 +133,12 @@ def stream_markup_timer(_, chat_id, played, dur):
 
 
 def stream_markup(_, chat_id):
-    return [
-        [
-            InlineKeyboardButton(
-                "▷",
-                callback_data=f"ADMIN Resume|{chat_id}",
-                style=random_style(),
-            ),
-            InlineKeyboardButton(
-                "II",
-                callback_data=f"ADMIN Pause|{chat_id}",
-                style=random_style(),
-            ),
-            InlineKeyboardButton(
-                "⏭",
-                callback_data=f"ADMIN Skip|{chat_id}",
-                style=random_style(),
-            ),
-            InlineKeyboardButton(
-                "▢",
-                callback_data=f"ADMIN Stop|{chat_id}",
-                style=random_style(),
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                "ᴀᴩʟᴀʏ",
-                callback_data=f"autoplay_toggle {chat_id}",
-                style=ButtonStyle.SUCCESS,
-            )
-        ],
-    ]
+    return stream_markup_timer(
+        _,
+        chat_id,
+        "00:00",
+        "00:00",
+    )
 
 
 def playlist_markup(_, videoid, user_id, ptype, channel, fplay):
