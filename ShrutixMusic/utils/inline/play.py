@@ -75,22 +75,27 @@ def stream_markup_timer(_, chat_id, played, dur):
             InlineKeyboardButton(
                 "▷",
                 callback_data=f"ADMIN Resume|{chat_id}",
-                style=random_style(),
+                style=ButtonStyle.DANGER,
             ),
             InlineKeyboardButton(
                 "II",
                 callback_data=f"ADMIN Pause|{chat_id}",
-                style=random_style(),
+                style=ButtonStyle.DANGER,
             ),
+            InlineKeyboardButton(
+            text="↻",
+            callback_data=f"ADMIN Replay|{chat_id}",
+            style=ButtonStyle.PRIMARY,
+        ),
             InlineKeyboardButton(
                 "‣‣I",
                 callback_data=f"ADMIN Skip|{chat_id}",
-                style=random_style(),
+                style=ButtonStyle.SUCCESS,
             ),
             InlineKeyboardButton(
                 "▢",
                 callback_data=f"ADMIN Stop|{chat_id}",
-                style=random_style(),
+                style=ButtonStyle.SUCCESS,
             ),
         ],
         [
