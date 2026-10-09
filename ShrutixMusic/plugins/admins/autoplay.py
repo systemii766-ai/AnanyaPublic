@@ -18,7 +18,7 @@ def _autoplay_button(chat_id, mode):
     ]
 
     return InlineKeyboardButton(
-        text="🔁 Aᴜᴛᴏᴩʟᴀʏ: ᴏɴ" if mode else "🔁 Aᴜᴛᴏᴩʟᴀʏ: ᴏꜰꜰ",
+        text="Aᴜᴛᴏᴩʟᴀʏ: ᴏɴ" if mode else "Aᴜᴛᴏᴩʟᴀʏ: ᴏꜰꜰ",
         callback_data=f"autoplay_toggle {chat_id}",
         style=random.choice(styles),
     )
@@ -37,16 +37,16 @@ async def autoplay_command(client, message: Message, _, chat_id):
     if action in ("on", "enable", "enabled"):
         await autoplay_on(chat_id)
         mode = True
-        text = "🔁 Aᴜᴛᴏᴩʟᴀʏ Tᴜʀɴᴇᴅ ᴏɴ ✅"
+        text = "Aᴜᴛᴏᴩʟᴀʏ Tᴜʀɴᴇᴅ ᴏɴ ✅"
 
     elif action in ("off", "disable", "disabled"):
         await autoplay_off(chat_id)
         mode = False
-        text = "🔁 Aᴜᴛᴏᴩʟᴀʏ Tᴜʀɴᴇᴅ ᴏꜰꜰ ❌"
+        text = "Aᴜᴛᴏᴩʟᴀʏ Tᴜʀɴᴇᴅ ᴏꜰꜰ ❌"
 
     else:
         return await message.reply_text(
-            "🔁 <b>Aᴜᴛᴏᴩʟᴀʏ</b>\n\n"
+            "<b>Aᴜᴛᴏᴩʟᴀʏ</b>\n\n"
             "Cᴀʟʟʙᴀᴄᴋ:\n"
             "<code>/autoplay off</code>\n"
             "<code>/autoplay on</code>"
@@ -90,11 +90,11 @@ async def autoplay_toggle(client, callback_query):
         if current:
             await autoplay_off(chat_id)
             new_mode = False
-            toast = "🔁 Aᴜᴛᴏᴩʟᴀʏ ᴏꜰꜰ ❌"
+            toast = "Aᴜᴛᴏᴩʟᴀʏ ᴏꜰꜰ ❌"
         else:
             await autoplay_on(chat_id)
             new_mode = True
-            toast = "🔁 Aᴜᴛᴏᴩʟᴀʏ ᴏɴ ✅"
+            toast = "Aᴜᴛᴏᴩʟᴀʏ ᴏɴ ✅"
 
         await callback_query.answer(toast)
 
