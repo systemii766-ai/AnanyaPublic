@@ -45,7 +45,7 @@ class Shruti(Client):
                     ),
                     InlineKeyboardButton(
                         "💻 Repo",
-                        url="https://github.com/ZoxxOP/AkashMusic2",
+                        url="https://github.com/ZoxxOP/AnanyaPublic",
                         style=ButtonStyle.PRIMARY,
                     ),
                 ],
