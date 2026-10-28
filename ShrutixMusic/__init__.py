@@ -37,7 +37,7 @@ dbb()
 heroku()
 
 nand = Shruti()
-akash = nand()
+akash = nand
 userbot = Userbot()
 
 
